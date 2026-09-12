@@ -1,21 +1,26 @@
 package main
 
 import (
-	api "agent-harness/api"
-	cli "agent-harness/cli"
-	"context"
+	"agent-harness/agent"
+	"agent-harness/api"
+	"agent-harness/cli"
 	"flag"
 	"log"
+	"net/http"
 )
 
 func main() {
-	httpAddress := flag.String("http", "", "serve the HTTP API on this address instead of starting the CLI")
+	address := flag.String("http", "127.0.0.1:8080", "HTTP API listen address")
 	flag.Parse()
-	if *httpAddress != "" {
-		if err := api.ListenAndServe(context.Background(), *httpAddress); err != nil {
-			log.Fatal(err)
+	cli.StartCli(func(assistant *agent.Agent) {
+		handler := api.Handler(nil)
+		if assistant != nil {
+			handler = api.Handler(assistant)
 		}
-		return
-	}
-	cli.StartCli()
+		go func() {
+			if err := http.ListenAndServe(*address, handler); err != nil {
+				log.Printf("HTTP API stopped: %v", err)
+			}
+		}()
+	})
 }

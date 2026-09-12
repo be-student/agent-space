@@ -5,13 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
-
-	agent "agent-harness/agent"
-	providers "agent-harness/providers"
 
 	"github.com/google/uuid"
 )
@@ -60,6 +56,11 @@ func Handler(runner agentRunner) http.Handler {
 			return
 		}
 
+		if runner == nil {
+			writeJSON(w, http.StatusServiceUnavailable, invokeResponse{Success: false, Error: "agent is not configured"})
+			return
+		}
+
 		result, err := runner.Run(r.Context(), request.Input, uuid.NewString())
 		if err != nil {
 			writeJSON(w, http.StatusInternalServerError, invokeResponse{Success: false, Error: "agent execution failed"})
@@ -69,15 +70,6 @@ func Handler(runner agentRunner) http.Handler {
 		writeJSON(w, http.StatusOK, invokeResponse{Success: true, Result: result})
 	})
 	return mux
-}
-
-// ListenAndServe creates the configured provider and serves the HTTP API.
-func ListenAndServe(ctx context.Context, address string) error {
-	provider, err := providers.NewGemini(ctx)
-	if err != nil {
-		return fmt.Errorf("configure agent: %w", err)
-	}
-	return http.ListenAndServe(address, Handler(agent.GetAgent(provider)))
 }
 
 func writeJSON(w http.ResponseWriter, status int, response invokeResponse) {

@@ -42,6 +42,15 @@ func TestInvokeRunsAgent(t *testing.T) {
 	assertResponse(t, response, invokeResponse{Success: true, Result: "done"})
 }
 
+func TestInvokeWithoutConfiguredAgent(t *testing.T) {
+	request := httptest.NewRequest(http.MethodPost, "/agent/invoke", strings.NewReader(`{"input":"hello"}`))
+	response := httptest.NewRecorder()
+	Handler(nil).ServeHTTP(response, request)
+	if response.Code != http.StatusServiceUnavailable {
+		t.Fatalf("expected unavailable agent, got %d", response.Code)
+	}
+}
+
 func TestInvokeRejectsInvalidInput(t *testing.T) {
 	for name, body := range map[string]string{
 		"missing":  `{}`,

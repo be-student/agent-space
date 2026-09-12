@@ -17,7 +17,7 @@ import (
 
 // StartCli runs the read-prompt-answer loop until the user leaves. Nothing here
 // writes to a stream directly: out owns every byte the CLI produces.
-func StartCli() {
+func StartCli(onReady ...func(*agent.Agent)) {
 	ctx := context.Background()
 	scanner := bufio.NewScanner(os.Stdin)
 	out := tui.NewOutput()
@@ -68,6 +68,10 @@ func StartCli() {
 	cmds := newCommands(out, scanner, session, provider, runID)
 	cmds.resume(ctx)
 	defer cmds.stop()
+
+	for _, ready := range onReady {
+		ready(assistant)
+	}
 
 	for {
 		out.Prompt("agent-space>")

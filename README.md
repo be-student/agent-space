@@ -34,8 +34,9 @@ Agent Harness written in Go.
 
 ## HTTP API
 
-Start agent-space in HTTP mode by supplying a listen address. Use a loopback
-address unless you have added authentication in front of the service.
+`go run .` starts the CLI and an HTTP listener on `127.0.0.1:8080`.
+Both use the same initialized agent. Override the listen address with `-http`;
+use loopback unless authentication is provided in front of the service.
 
 ```bash
 go run . -http 127.0.0.1:8080
@@ -50,7 +51,7 @@ curl -X POST http://127.0.0.1:8080/agent/invoke \
 ```
 
 A successful request returns `{"success":true,"result":"..."}`. Invalid
-input returns HTTP 400, and agent execution failures return HTTP 500 with
+input returns HTTP 400, an unconfigured agent returns HTTP 503, and execution failures return HTTP 500 with
 `{"success":false,"error":"..."}`.
 
 ## CLI commands
